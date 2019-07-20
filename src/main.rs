@@ -24,8 +24,7 @@ impl Display for MainError {
     }
 }
 
-impl Error for MainError {
-}
+impl Error for MainError {}
 
 impl From<io::Error> for MainError {
     fn from(base: io::Error) -> MainError {
@@ -45,19 +44,23 @@ fn main() -> Result<(), Box<dyn Error>> {
     let from_filename = args.next().expect("Must have file to read from");
     let to_filename = args.next().expect("Must have file to write to");
     let mut from_file = OpenOptions::new().read(true).open(&from_filename)?;
-    let mut contents = Vec::with_capacity(
-        usize::try_from(from_file.metadata()?.len())?);
+    let from_bytes = usize::try_from(from_file.metadata()?.len())?;
+    let mut contents = Vec::with_capacity(from_bytes);
     let _ = from_file.read_to_end(&mut contents)?;
     let mut split = contents.splitn(2, |&c| c == b'\n');
     let first_line = split.next().unwrap_or(&EMPTY_LINE);
     let rest = split.next().unwrap_or(&EMPTY_LINE);
-    let mut to_file = OpenOptions::new().write(true).create_new(true)
+    let mut to_file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
         .open(&to_filename)?;
     to_file.write_all(first_line)?;
     // split in impl<T> Deref<Target=[T]> for Vec<T> excludes the split token,
     // so the line terminator needs to be manually added back in.
     to_file.write_all(&EMPTY_LINE)?;
-    let mut from_file = OpenOptions::new().write(true).truncate(true)
+    let mut from_file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
         .open(&from_filename)?;
     from_file.write_all(rest)?;
     Ok(())
